@@ -1,1 +1,19 @@
 "venv/" 
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+venv/
+.env
+
+# Node.js
+node_modules/
+build/
+dist/
+
+# Mac/OS
+.DS_Store
+
+# Docker
+*.log
+*.pid
