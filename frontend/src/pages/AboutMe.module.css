@@ -1,0 +1,132 @@
+/* src/pages/AboutMe.module.css */
+
+.container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e0f2fe, #fdf2f8);
+  padding: 3rem 2rem;
+  color: #1f2937;
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.wrapper {
+  max-width: 960px;
+  margin: 0 auto;
+  backdrop-filter: blur(8px);
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 2rem;
+  animation: fadeInUp 1s ease forwards;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero h1 {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #111827;
+  background: linear-gradient(to right, #6366f1, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+  animation: fadeIn 1.3s ease;
+}
+
+.sectionTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  color: #1d4ed8;
+}
+
+.skillsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.skillCard {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #e5e7eb;
+  padding: 1.25rem 0.75rem;
+  text-align: center;
+  border-radius: 1rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.skillCard:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
+}
+
+.icon {
+  font-size: 2rem;
+  color: #3b82f6;
+  margin-bottom: 0.5rem;
+  animation: popUp 0.8s ease;
+}
+
+@keyframes popUp {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.timeline {
+  border-left: 3px solid #6366f1;
+  padding-left: 1rem;
+  position: relative;
+  animation: fadeIn 1.4s ease;
+}
+
+.timelineItem {
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-left: 1rem;
+}
+
+.timelineItem::before {
+  content: '';
+  position: absolute;
+  left: -1.1rem;
+  top: 0.2rem;
+  width: 12px;
+  height: 12px;
+  background-color: #6366f1;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px #e0e7ff;
+}
+
+.year {
+  color: #4338ca;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.description {
+  font-size: 0.95rem;
+  color: #4b5563;
+  margin-top: 0.25rem;
+}

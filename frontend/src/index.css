@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional: keep chat above all other content */
+iframe[src*="tawk.to"] {
+  z-index: 9999 !important;
+}
