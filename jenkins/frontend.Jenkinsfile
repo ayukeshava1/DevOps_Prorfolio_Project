@@ -1,8 +1,8 @@
 pipeline {
-    agent any
+    agent { label 'slave1' }  // Now this job runs only on slave1
 
     environment {
-        IMAGE_NAME = "ayuleshava/frontend-app"  // change this
+        IMAGE_NAME = "ayuleshava/frontend-app"
     }
 
     stages {
