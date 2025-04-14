@@ -22,9 +22,13 @@ FROM nginx:alpine
 # Remove default nginx static files
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy build files from previous stage
+# Optional: Copy custom Nginx config (if you have one)
+# COPY nginx.conf /etc/nginx/nginx.conf
+
+# Copy build files from the previous stage
 COPY --from=builder /app/build /usr/share/nginx/html
 
 EXPOSE 80
 
+# Start Nginx in the foreground
 CMD ["nginx", "-g", "daemon off;"]
