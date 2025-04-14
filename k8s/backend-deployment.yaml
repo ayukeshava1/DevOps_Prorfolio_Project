@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend-deployment
+  namespace: portfolio
   labels:
     app: backend
 spec:
@@ -15,7 +16,7 @@ spec:
         app: backend
     spec:
       containers:
-      - name: backend
-        image: ayuleshava/backend-app:latest
-        ports:
-        - containerPort: 8000
+        - name: backend
+          image: ayuleshava/backend-app:latest
+          ports:
+            - containerPort: 8000
