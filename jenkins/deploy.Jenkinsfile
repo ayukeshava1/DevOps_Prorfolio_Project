@@ -1,49 +1,52 @@
 pipeline {
-    agent any
+  agent any
 
-    environment {
-        FRONTEND_IMAGE = "ayuleshava/frontend-app:latest"
-        BACKEND_IMAGE = "ayuleshava/backend-app:latest"
-        K8S_NAMESPACE = "portfolio"
+  environment {
+    KUBECONFIG = credentials('k8s-kubeconfig') // Reference your K8s credentials from Jenkins
+  }
+
+  stages {
+    stage('Build') {
+      steps {
+        script {
+          // Docker build & push, other build steps
+        }
+      }
     }
 
-    stages {
-        stage('Pull Frontend Image') {
-            steps {
-                script {
-                    echo "Pulling Frontend Docker image..."
-                    sh "docker pull ${FRONTEND_IMAGE}"
-                }
-            }
+    stage('Deploy to Kubernetes') {
+      steps {
+        script {
+          // Apply the Kubernetes manifests (assuming they're stored in the repo)
+          sh 'kubectl apply -f k8s/namespace.yaml'
+          sh 'kubectl apply -f k8s/postgres-secret.yaml'
+          sh 'kubectl apply -f k8s/postgres-pvc.yaml'
+          sh 'kubectl apply -f k8s/postgres-deployment.yaml'
+          sh 'kubectl apply -f k8s/postgres-service.yaml'
+          sh 'kubectl apply -f k8s/backend-deployment.yaml'
+          sh 'kubectl apply -f k8s/frontend-deployment.yaml'
+          sh 'kubectl apply -f k8s/ingress.yaml'
         }
-
-        stage('Pull Backend Image') {
-            steps {
-                script {
-                    echo "Pulling Backend Docker image..."
-                    sh "docker pull ${BACKEND_IMAGE}"
-                }
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                script {
-                    echo "Deploying to Kubernetes..."
-
-                    // Apply Kubernetes manifest for frontend deployment
-                    sh """
-                    kubectl apply -f k8s/frontend-deployment.yaml
-                    kubectl apply -f k8s/frontend-service.yaml
-                    """
-
-                    // Apply Kubernetes manifest for backend deployment
-                    sh """
-                    kubectl apply -f k8s/backend-deployment.yaml
-                    kubectl apply -f k8s/backend-service.yaml
-                    """
-                }
-            }
-        }
+      }
     }
+
+    stage('Post-deployment Checks') {
+      steps {
+        script {
+          // Verify deployment success
+          sh 'kubectl get pods -n jenkins'
+          // You can use curl to verify app is accessible after deployment
+        }
+      }
+    }
+  }
+
+  post {
+    success {
+      // Send notifications or other post-deployment steps
+    }
+    failure {
+      // Handle failure scenarios
+    }
+  }
 }
