@@ -41,5 +41,9 @@ spec:
             httpGet:
               path: /health    # Change if your health check path is different
               port: 8000
+              scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 5
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 3
