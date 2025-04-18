@@ -37,3 +37,9 @@ spec:
                 secretKeyRef:
                   name: postgres-secret
                   key: password
+          readinessProbe:
+            httpGet:
+              path: /health    # Change if your health check path is different
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
