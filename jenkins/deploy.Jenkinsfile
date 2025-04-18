@@ -2,40 +2,43 @@ pipeline {
   agent any
 
   environment {
-    KUBECONFIG = credentials('k8s-kubeconfig') // Reference your K8s credentials from Jenkins
+    KUBECONFIG = credentials('k8s-kubeconfig') // Secret file credentials in Jenkins
   }
 
   stages {
-    stage('Build') {
+    stage('Checkout') {
       steps {
-        script {
-          // Docker build & push, other build steps
-        }
+        git branch: 'main', url: 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
       }
     }
 
     stage('Deploy to Kubernetes') {
       steps {
         script {
-          // Apply the Kubernetes manifests (assuming they're stored in the repo)
-          sh 'kubectl apply -f k8s/namespace.yaml'
-          sh 'kubectl apply -f k8s/postgres-secret.yaml'
-          sh 'kubectl apply -f k8s/postgres-pvc.yaml'
-          sh 'kubectl apply -f k8s/postgres-deployment.yaml'
-          sh 'kubectl apply -f k8s/postgres-service.yaml'
-          sh 'kubectl apply -f k8s/backend-deployment.yaml'
-          sh 'kubectl apply -f k8s/frontend-deployment.yaml'
-          sh 'kubectl apply -f k8s/ingress.yaml'
+          // Ensure namespace exists
+          sh 'kubectl get ns portfolio || kubectl create ns portfolio'
+
+          // Apply backend & frontend using pushed images from DockerHub
+          sh 'kubectl apply -f k8s/postgres-secret.yaml -n portfolio'
+          sh 'kubectl apply -f k8s/postgres-pvc.yaml -n portfolio'
+          sh 'kubectl apply -f k8s/postgres-deployment.yaml -n portfolio'
+          sh 'kubectl apply -f k8s/postgres-service.yaml -n portfolio'
+          sh 'kubectl apply -f k8s/backend-deployment.yaml -n portfolio'
+          sh 'kubectl apply -f k8s/backend-service.yaml -n portfolio'
+          sh 'kubectl apply -f k8s/frontend-deployment.yaml -n portfolio'
+          sh 'kubectl apply -f k8s/frontend-service.yaml -n portfolio'
+
+          // Optional
+          sh 'kubectl apply -f k8s/ingress.yaml -n portfolio || true'
         }
       }
     }
 
-    stage('Post-deployment Checks') {
+    stage('Verify') {
       steps {
         script {
-          // Verify deployment success
-          sh 'kubectl get pods -n jenkins'
-          // You can use curl to verify app is accessible after deployment
+          sh 'kubectl get pods -n portfolio'
+          sh 'kubectl get svc -n portfolio'
         }
       }
     }
@@ -43,10 +46,10 @@ pipeline {
 
   post {
     success {
-      // Send notifications or other post-deployment steps
+      echo "✅ Deployment to Kubernetes successful."
     }
     failure {
-      // Handle failure scenarios
+      echo "❌ Deployment failed. Check pipeline logs."
     }
   }
 }
