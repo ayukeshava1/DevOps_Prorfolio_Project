@@ -18,7 +18,7 @@ pipeline {
           // Ensure namespace exists
           sh 'kubectl get ns portfolio || kubectl create ns portfolio'
 
-          // Apply backend & frontend using pushed images from DockerHub
+          // Apply manifests in the portfolio namespace
           sh 'kubectl apply -f k8s/postgres-secret.yaml -n portfolio'
           sh 'kubectl apply -f k8s/postgres-pvc.yaml -n portfolio'
           sh 'kubectl apply -f k8s/postgres-deployment.yaml -n portfolio'
@@ -27,8 +27,8 @@ pipeline {
           sh 'kubectl apply -f k8s/backend-service.yaml -n portfolio'
           sh 'kubectl apply -f k8s/frontend-deployment.yaml -n portfolio'
           sh 'kubectl apply -f k8s/frontend-service.yaml -n portfolio'
-
-          // Optional
+          
+          // Optional: Apply ingress if available; if not, ignore error
           sh 'kubectl apply -f k8s/ingress.yaml -n portfolio || true'
         }
       }
