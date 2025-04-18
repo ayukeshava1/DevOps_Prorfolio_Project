@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from .database import Base, engine
 from app.routers import auth
 
-
 # 🚀 Import your blog router
 from app.routers import blog_router
 
@@ -30,3 +29,8 @@ app.add_middleware(
 # ✅ Include blog router
 app.include_router(blog_router.router, prefix="/api/blogs", tags=["Blogs"])
 app.include_router(auth.router)
+
+# ✅ Health check endpoint
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
