@@ -1,5 +1,5 @@
 pipeline {
-  agent any
+  agent { label 'master' }
 
   environment {
     KUBECONFIG = credentials('k8s-kubeconfig') // Secret file credentials in Jenkins
