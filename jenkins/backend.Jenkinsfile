@@ -1,8 +1,8 @@
 pipeline {
-    agent { label 'slave2' }
+    agent { label 'slave2' }  // Now this job runs only on slave2
 
     environment {
-        IMAGE_NAME = "ayuleshava/backend-app"
+        IMAGE_NAME = "ayuleshava/backend-app"  // Docker image name
     }
 
     stages {
@@ -16,9 +16,7 @@ pipeline {
             steps {
                 dir('backend') {
                     script {
-                        def tag = "${env.BUILD_NUMBER}"
-                        // Build the image using the build number as a tag
-                        docker.build("${IMAGE_NAME}:${tag}")
+                        docker.build("${IMAGE_NAME}:latest")
                     }
                 }
             }
@@ -27,11 +25,8 @@ pipeline {
         stage('Push to DockerHub') {
             steps {
                 script {
-                    def tag = "${env.BUILD_NUMBER}"
                     docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-creds') {
-                        // Push the image tagged with build number, and also update "latest"
-                        docker.image("${IMAGE_NAME}:${tag}").push()
-                        docker.image("${IMAGE_NAME}:${tag}").push("latest")
+                        docker.image("${IMAGE_NAME}:latest").push()
                     }
                 }
             }
