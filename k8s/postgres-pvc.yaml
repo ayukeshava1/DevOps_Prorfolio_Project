@@ -14,7 +14,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-pvc
-  namespace: portfolio
+  namespace: keshava-project
 spec:
   accessModes:
     - ReadWriteOnce
