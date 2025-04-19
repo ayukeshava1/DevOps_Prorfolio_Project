@@ -1,97 +1,46 @@
 pipeline {
-    agent { label 'master' }
+    agent { label 'master' }  // Use Jenkins master node for kubectl
 
     environment {
-        FRONTEND_IMAGE = "ayuleshava/frontend-app"
-        BACKEND_IMAGE = "ayuleshava/backend-app"
-        KUBECONFIG_CRED_ID = 'k8s-kubeconfig'
-        NAMESPACE = "default"
+        KUBE_CONFIG_CREDENTIAL_ID = 'k8s-kubeconfig'   // Jenkins credential ID for kubeconfig file
+        NAMESPACE = 'keshava-project'                  // Kubernetes namespace
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Checkout Repo') {
             steps {
                 git branch: 'main', url: 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
             }
         }
 
-        stage('Build & Push Backend Image') {
+        stage('Apply K8s Manifests') {
             steps {
-                dir('backend') {
+                withCredentials([file(credentialsId: "${KUBE_CONFIG_CREDENTIAL_ID}", variable: 'KUBECONFIG_FILE')]) {
                     script {
-                        docker.build("${BACKEND_IMAGE}:latest")
-                        docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-creds') {
-                            docker.image("${BACKEND_IMAGE}:latest").push()
+                        try {
+                            sh """
+                                export KUBECONFIG=$KUBECONFIG_FILE
+
+                                # Create namespace if it doesn't exist
+                                kubectl get ns ${NAMESPACE} || kubectl create ns ${NAMESPACE}
+
+                                # Apply all K8s manifests
+                                kubectl apply -n ${NAMESPACE} -f k8s/postgres-secret.yaml
+                                kubectl apply -n ${NAMESPACE} -f k8s/postgres-pvc.yaml
+                                kubectl apply -n ${NAMESPACE} -f k8s/postgres-deployment.yaml
+                                kubectl apply -n ${NAMESPACE} -f k8s/postgres-service.yaml
+
+                                kubectl apply -n ${NAMESPACE} -f k8s/backend-deployment.yaml
+                                kubectl apply -n ${NAMESPACE} -f k8s/backend-service.yaml
+
+                                kubectl apply -n ${NAMESPACE} -f k8s/frontend-deployment.yaml
+                                kubectl apply -n ${NAMESPACE} -f k8s/frontend-service.yaml
+
+                                kubectl apply -n ${NAMESPACE} -f k8s/ingress.yaml
+                            """
+                        } catch (err) {
+                            error("❌ Deployment failed: ${err}")
                         }
-                    }
-                }
-            }
-        }
-
-        stage('Build & Push Frontend Image') {
-            steps {
-                dir('frontend') {
-                    script {
-                        docker.build("${FRONTEND_IMAGE}:latest")
-                        docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-creds') {
-                            docker.image("${FRONTEND_IMAGE}:latest").push()
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Deploy to Remote Kubernetes') {
-            steps {
-                withCredentials([file(credentialsId: "${KUBECONFIG_CRED_ID}", variable: 'KUBECONFIG')]) {
-                    withEnv(["KUBECONFIG=$KUBECONFIG"]) {
-                        sh """
-                            echo '🚀 Applying Kubernetes manifests...'
-                            kubectl apply -f k8s/postgres.yaml --namespace=${NAMESPACE}
-                            kubectl apply -f k8s/backend.yaml --namespace=${NAMESPACE}
-                            kubectl apply -f k8s/frontend.yaml --namespace=${NAMESPACE}
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Verify Pod Status & Rollback if Needed') {
-            steps {
-                withCredentials([file(credentialsId: "${KUBECONFIG_CRED_ID}", variable: 'KUBECONFIG')]) {
-                    withEnv(["KUBECONFIG=$KUBECONFIG"]) {
-                        script {
-                            def crashDetected = false
-                            def crashStatus = sh(
-                                script: "kubectl get pods --namespace=${NAMESPACE} -o jsonpath='{.items[*].status.containerStatuses[*].state.waiting.reason}'",
-                                returnStdout: true
-                            ).trim()
-
-                            if (crashStatus.contains("CrashLoopBackOff")) {
-                                crashDetected = true
-                            }
-
-                            if (crashDetected) {
-                                echo "❌ CrashLoopBackOff detected! Initiating rollback..."
-                                sh """
-                                    kubectl delete deployment backend-deployment --namespace=${NAMESPACE} || true
-                                    kubectl delete deployment frontend-deployment --namespace=${NAMESPACE} || true
-                                """
-                                error("Crash detected. Rollback completed.")
-                            } else {
-                                echo "✅ All pods healthy. No rollback required."
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Verify Services') {
-            steps {
-                withCredentials([file(credentialsId: "${KUBECONFIG_CRED_ID}", variable: 'KUBECONFIG')]) {
-                    withEnv(["KUBECONFIG=$KUBECONFIG"]) {
-                        sh 'kubectl get svc --namespace=${NAMESPACE}'
                     }
                 }
             }
@@ -99,11 +48,17 @@ pipeline {
     }
 
     post {
-        success {
-            echo "✅ Deployment completed successfully!"
-        }
         failure {
-            echo "🚨 Build failed. Please check logs."
+            echo "⚠️ Deployment failed — cleaning up resources..."
+
+            withCredentials([file(credentialsId: "${KUBE_CONFIG_CREDENTIAL_ID}", variable: 'KUBECONFIG_FILE')]) {
+                sh """
+                    export KUBECONFIG=$KUBECONFIG_FILE
+
+                    # Delete all resources in the namespace created by Jenkins
+                    kubectl delete all --all -n ${NAMESPACE}
+                """
+            }
         }
     }
 }
