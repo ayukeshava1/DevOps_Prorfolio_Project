@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'master' }  // Executes on Jenkins master
+    agent { label 'master' }
 
     environment {
         FRONTEND_IMAGE = "ayuleshava/frontend-app"
@@ -9,7 +9,7 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
                 git branch: 'main', url: 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
             }
@@ -41,41 +41,47 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy to Remote Kubernetes') {
             steps {
                 withCredentials([file(credentialsId: "${KUBECONFIG_CRED_ID}", variable: 'KUBECONFIG')]) {
                     withEnv(["KUBECONFIG=$KUBECONFIG"]) {
                         sh """
-                        kubectl apply -f k8s/postgres.yaml
-                        kubectl apply -f k8s/backend.yaml
-                        kubectl apply -f k8s/frontend.yaml
+                            echo '🚀 Applying Kubernetes manifests...'
+                            kubectl apply -f k8s/postgres.yaml --namespace=${NAMESPACE}
+                            kubectl apply -f k8s/backend.yaml --namespace=${NAMESPACE}
+                            kubectl apply -f k8s/frontend.yaml --namespace=${NAMESPACE}
                         """
                     }
                 }
             }
         }
 
-        stage('Verify Pods & Rollback if Needed') {
+        stage('Verify Pod Status & Rollback if Needed') {
             steps {
-                script {
-                    def crashFound = false
+                withCredentials([file(credentialsId: "${KUBECONFIG_CRED_ID}", variable: 'KUBECONFIG')]) {
+                    withEnv(["KUBECONFIG=$KUBECONFIG"]) {
+                        script {
+                            def crashDetected = false
+                            def crashStatus = sh(
+                                script: "kubectl get pods --namespace=${NAMESPACE} -o jsonpath='{.items[*].status.containerStatuses[*].state.waiting.reason}'",
+                                returnStdout: true
+                            ).trim()
 
-                    def podStatus = sh(
-                        script: "kubectl get pods -o jsonpath='{.items[*].status.containerStatuses[*].state.waiting.reason}'",
-                        returnStdout: true
-                    ).trim()
+                            if (crashStatus.contains("CrashLoopBackOff")) {
+                                crashDetected = true
+                            }
 
-                    if (podStatus.contains("CrashLoopBackOff")) {
-                        crashFound = true
-                    }
-
-                    if (crashFound) {
-                        echo "❌ Crash detected. Rolling back..."
-                        sh "kubectl delete deployment backend-deployment || true"
-                        sh "kubectl delete deployment frontend-deployment || true"
-                        error("CrashLoopBackOff found. Rollback done.")
-                    } else {
-                        echo "✅ No crash detected. Proceeding..."
+                            if (crashDetected) {
+                                echo "❌ CrashLoopBackOff detected! Initiating rollback..."
+                                sh """
+                                    kubectl delete deployment backend-deployment --namespace=${NAMESPACE} || true
+                                    kubectl delete deployment frontend-deployment --namespace=${NAMESPACE} || true
+                                """
+                                error("Crash detected. Rollback completed.")
+                            } else {
+                                echo "✅ All pods healthy. No rollback required."
+                            }
+                        }
                     }
                 }
             }
@@ -83,17 +89,21 @@ pipeline {
 
         stage('Verify Services') {
             steps {
-                sh 'kubectl get svc'
+                withCredentials([file(credentialsId: "${KUBECONFIG_CRED_ID}", variable: 'KUBECONFIG')]) {
+                    withEnv(["KUBECONFIG=$KUBECONFIG"]) {
+                        sh 'kubectl get svc --namespace=${NAMESPACE}'
+                    }
+                }
             }
         }
     }
 
     post {
-        failure {
-            echo '🚨 Pipeline failed. Check error logs!'
-        }
         success {
-            echo '✅ Deployment successful and verified!'
+            echo "✅ Deployment completed successfully!"
+        }
+        failure {
+            echo "🚨 Build failed. Please check logs."
         }
     }
 }
