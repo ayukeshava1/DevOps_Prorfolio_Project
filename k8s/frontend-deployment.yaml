@@ -1,19 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: react-frontend
+  name: frontend
+  labels:
+    app: frontend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: react-frontend
+      app: frontend
   template:
     metadata:
       labels:
-        app: react-frontend
+        app: frontend
     spec:
       containers:
-        - name: frontend
-          image: <your-dockerhub-username>/react-frontend:latest  # 🔁 Replace with yours
-          ports:
-            - containerPort: 80
+      - name: react-frontend
+        image: ayuleshava/frontend-app:latest   # Replace with your image
+        env:
+        - name: REACT_APP_API_BASE_URL
+          value: "http://fastapi-service:8000"   # Make sure this points to the backend service in K8s
+        ports:
+        - containerPort: 80
