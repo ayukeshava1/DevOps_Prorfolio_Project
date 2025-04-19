@@ -1,81 +1,99 @@
 pipeline {
-  agent { label 'master' }
+    agent { label 'master' }  // Executes on Jenkins master
 
-  environment {
-    KUBECONFIG = credentials('k8s-kubeconfig')
-  }
-
-  stages {
-    stage('Checkout') {
-      steps {
-        git branch: 'main', url: 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
-      }
+    environment {
+        FRONTEND_IMAGE = "ayuleshava/frontend-app"
+        BACKEND_IMAGE = "ayuleshava/backend-app"
+        KUBECONFIG_CRED_ID = 'k8s-kubeconfig'
+        NAMESPACE = "default"
     }
 
-    stage('Prepare Namespace') {
-      steps {
-        script {
-          sh 'kubectl get ns portfolio || kubectl create ns portfolio'
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
+            }
         }
-      }
-    }
 
-    stage('Apply Secrets and PVCs') {
-      steps {
-        script {
-          sh 'kubectl apply -f k8s/postgres-secret.yaml -n portfolio'
-          sh 'kubectl apply -f k8s/postgres-pvc.yaml -n portfolio'
+        stage('Build & Push Backend Image') {
+            steps {
+                dir('backend') {
+                    script {
+                        docker.build("${BACKEND_IMAGE}:latest")
+                        docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-creds') {
+                            docker.image("${BACKEND_IMAGE}:latest").push()
+                        }
+                    }
+                }
+            }
         }
-      }
-    }
 
-    stage('Apply Deployments and Services') {
-      steps {
-        script {
-          sh 'kubectl apply -f k8s/postgres-deployment.yaml -n portfolio'
-          sh 'kubectl apply -f k8s/postgres-service.yaml -n portfolio'
-          sh 'kubectl apply -f k8s/backend-deployment.yaml -n portfolio'
-          sh 'kubectl apply -f k8s/backend-service.yaml -n portfolio'
-          sh 'kubectl apply -f k8s/frontend-deployment.yaml -n portfolio'
-          sh 'kubectl apply -f k8s/frontend-service.yaml -n portfolio'
-          sh 'kubectl apply -f k8s/ingress.yaml -n portfolio || true'
+        stage('Build & Push Frontend Image') {
+            steps {
+                dir('frontend') {
+                    script {
+                        docker.build("${FRONTEND_IMAGE}:latest")
+                        docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-creds') {
+                            docker.image("${FRONTEND_IMAGE}:latest").push()
+                        }
+                    }
+                }
+            }
         }
-      }
-    }
 
-    stage('Verify Rollouts') {
-      steps {
-        script {
-          sh 'kubectl rollout status deployment/postgres -n portfolio || true'
-          sh 'kubectl rollout status deployment/backend-deployment -n portfolio || true'
-          sh 'kubectl rollout status deployment/frontend-deployment -n portfolio || true'
+        stage('Deploy to Kubernetes') {
+            steps {
+                withCredentials([file(credentialsId: "${KUBECONFIG_CRED_ID}", variable: 'KUBECONFIG')]) {
+                    withEnv(["KUBECONFIG=$KUBECONFIG"]) {
+                        sh """
+                        kubectl apply -f k8s/postgres.yaml
+                        kubectl apply -f k8s/backend.yaml
+                        kubectl apply -f k8s/frontend.yaml
+                        """
+                    }
+                }
+            }
         }
-      }
-    }
 
-    stage('Check Status') {
-      steps {
-        script {
-          sh 'kubectl get pods -n portfolio'
-          sh 'kubectl get svc -n portfolio'
+        stage('Verify Pods & Rollback if Needed') {
+            steps {
+                script {
+                    def crashFound = false
+
+                    def podStatus = sh(
+                        script: "kubectl get pods -o jsonpath='{.items[*].status.containerStatuses[*].state.waiting.reason}'",
+                        returnStdout: true
+                    ).trim()
+
+                    if (podStatus.contains("CrashLoopBackOff")) {
+                        crashFound = true
+                    }
+
+                    if (crashFound) {
+                        echo "❌ Crash detected. Rolling back..."
+                        sh "kubectl delete deployment backend-deployment || true"
+                        sh "kubectl delete deployment frontend-deployment || true"
+                        error("CrashLoopBackOff found. Rollback done.")
+                    } else {
+                        echo "✅ No crash detected. Proceeding..."
+                    }
+                }
+            }
         }
-      }
-    }
-  }
 
-  post {
-    success {
-      echo "✅ Deployment succeeded."
+        stage('Verify Services') {
+            steps {
+                sh 'kubectl get svc'
+            }
+        }
     }
 
-    failure {
-      echo "❌ Deployment failed. Attempting rollback..."
-      script {
-        // Only rollback the app-specific deployments
-        sh 'kubectl rollout undo deployment/backend-deployment -n portfolio || true'
-        sh 'kubectl rollout undo deployment/frontend-deployment -n portfolio || true'
-        sh 'kubectl rollout undo deployment/postgres -n portfolio || true'
-      }
+    post {
+        failure {
+            echo '🚨 Pipeline failed. Check error logs!'
+        }
+        success {
+            echo '✅ Deployment successful and verified!'
+        }
     }
-  }
 }
