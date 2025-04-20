@@ -83,20 +83,16 @@ from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 import os
 
-# Load environment variables from .env
+# Load environment variables (including Kubernetes secrets)
 load_dotenv()
 
-# Use DATABASE_URL if available, otherwise construct from individual env vars
+# Use Kubernetes secret first, fallback to individual env vars
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
-    DB_USER = os.getenv("DB_USER")
-    DB_PASS = os.getenv("DB_PASS")
-    DB_HOST = os.getenv("DB_HOST")
-    DB_PORT = os.getenv("DB_PORT", "5432")
-    DB_NAME = os.getenv("DB_NAME")
-    DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    DATABASE_URL = f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@{os.getenv('DB_HOST', 'postgres-service')}:{os.getenv('DB_PORT', '5432')}/{os.getenv('DB_NAME')}"
 
-engine = create_engine(DATABASE_URL)
+# ✅ Improved connection handling with `pool_pre_ping`
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -108,10 +104,9 @@ def get_db():
         db.close()
 
 def check_database():
-    from app.models.blogs import Blog
     try:
         with SessionLocal() as session:
-            session.query(Blog).first()
-        print("✅ Database connection successful and 'blogs' table found.")
+            session.execute("SELECT 1")
+        print("✅ Database connection successful.")
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
