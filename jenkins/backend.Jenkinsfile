@@ -1,11 +1,19 @@
 pipeline {
-    agent { label 'slave2' }  // Now this job runs only on slave2
+    agent { label 'slave2' }  // Runs only on slave2
 
     environment {
-        IMAGE_NAME = "ayuleshava/backend-app"  // Docker image name
+        IMAGE_NAME = "ayuleshava/backend-app"
     }
 
     stages {
+        stage('Cleanup') {
+            steps {
+                script {
+                    sh 'docker system prune -f'  // Clears unused images
+                }
+            }
+        }
+
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
@@ -26,10 +34,16 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-creds') {
-                        docker.image("${IMAGE_NAME}:latest").push()
+                        docker.image("${IMAGE_NAME}").push('latest')
                     }
                 }
             }
+        }
+    }
+
+    post {
+        failure {
+            echo "Backend pipeline failed!"
         }
     }
 }
