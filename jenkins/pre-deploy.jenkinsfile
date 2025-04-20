@@ -37,7 +37,6 @@ pipeline {
                                 kubectl apply -n ${NAMESPACE} -f k8s/fastapi-secret.yaml
 
                                 # Apply storage configurations
-                                kubectl apply -n ${NAMESPACE} -f k8s/postgres-pv.yaml
                                 kubectl apply -n ${NAMESPACE} -f k8s/postgres-pvc.yaml
 
                                 # Apply Ingress routing setup
