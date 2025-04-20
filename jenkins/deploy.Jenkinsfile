@@ -36,7 +36,6 @@ pipeline {
                                 kubectl apply -n ${NAMESPACE} -f k8s/frontend-deployment.yaml
                                 kubectl apply -n ${NAMESPACE} -f k8s/frontend-service.yaml
 
-                                kubectl apply -n ${NAMESPACE} -f k8s/ingress.yaml
                             """
                         } catch (err) {
                             error("❌ Deployment failed: ${err}")
