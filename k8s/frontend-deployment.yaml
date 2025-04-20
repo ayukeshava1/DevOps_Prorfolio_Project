@@ -3,22 +3,22 @@ kind: Deployment
 metadata:
   name: frontend
   labels:
-    app: frontend
+    app: react-frontend  # This should match the service selector
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: frontend
+      app: react-frontend  # This should match the service selector
   template:
     metadata:
       labels:
-        app: frontend
+        app: react-frontend  # This should match the service selector
     spec:
       containers:
       - name: react-frontend
         image: ayuleshava/frontend-app:latest   # Replace with your image
         env:
         - name: REACT_APP_API_BASE_URL
-          value: "http://fastapi-service:8000"   # Make sure this points to the backend service in K8s
+          value: "http://fastapi-service:8000"   # Ensure this points to the backend service
         ports:
         - containerPort: 80
