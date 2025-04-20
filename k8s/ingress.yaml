@@ -15,7 +15,7 @@ spec:
             name: fastapi-service
             port:
               number: 8000
-      - path: /  # You may want to specify exact paths here to prevent conflict
+      - path: /  # This catches all other traffic, adjust if necessary
         pathType: Prefix
         backend:
           service:
