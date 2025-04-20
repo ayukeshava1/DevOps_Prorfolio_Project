@@ -1,0 +1,75 @@
+pipeline {
+    agent { label 'master' }  // Run on Jenkins master node
+
+    environment {
+        KUBE_CONFIG_CREDENTIAL_ID = 'k8s-kubeconfig'
+        NAMESPACE = 'keshava-project'
+        REPO_URL = 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
+        REPO_FOLDER = 'DevOps_Prorfolio_Project'
+    }
+
+    stages {
+        stage('Pre-Build: Checkout Repo') {
+            steps {
+                script {
+                    if (!fileExists(REPO_FOLDER)) {
+                        git branch: 'main', url: REPO_URL
+                    }
+                }
+            }
+        }
+
+        stage('Pre-Build: Apply Kubernetes Manifests') {
+            steps {
+                withCredentials([file(credentialsId: "${KUBE_CONFIG_CREDENTIAL_ID}", variable: 'KUBECONFIG_FILE')]) {
+                    script {
+                        try {
+                            sh """
+                                set -e  # Stop execution on error
+
+                                export KUBECONFIG=${KUBECONFIG_FILE}
+                                
+                                # Ensure namespace exists
+                                kubectl get ns ${NAMESPACE} || kubectl create namespace ${NAMESPACE}
+
+                                # Apply secrets first
+                                kubectl apply -n ${NAMESPACE} -f k8s/postgres-secret.yaml
+                                kubectl apply -n ${NAMESPACE} -f k8s/fastapi-secret.yaml
+
+                                # Apply storage configurations
+                                kubectl apply -n ${NAMESPACE} -f k8s/postgres-pv.yaml
+                                kubectl apply -n ${NAMESPACE} -f k8s/postgres-pvc.yaml
+
+                                # Apply Ingress routing setup
+                                kubectl apply -n ${NAMESPACE} -f k8s/ingress.yaml
+
+                                # Validate all resources
+                                kubectl get pv -A
+                                kubectl get pvc -A
+                                kubectl get ingress -A
+                            """
+                        } catch (err) {
+                            error("❌ Pre-Build setup failed: ${err}")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo "⚠️ Pre-Build failed — cleaning up environment..."
+
+            withCredentials([file(credentialsId: "${KUBE_CONFIG_CREDENTIAL_ID}", variable: 'KUBECONFIG_FILE')]) {
+                sh """
+                    export KUBECONFIG=$KUBECONFIG_FILE
+
+                    # Cleanup pre-build resources if setup fails
+                    kubectl delete all --all -n ${NAMESPACE} || true
+                    kubectl delete ns ${NAMESPACE} || true
+                """
+            }
+        }
+    }
+}
