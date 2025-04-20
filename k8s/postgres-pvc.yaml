@@ -4,7 +4,7 @@ metadata:
   name: postgres-pv
 spec:
   capacity:
-    storage: 2Gi         # <-- Match this with your PVC
+    storage: 2Gi
   accessModes:
     - ReadWriteOnce
   hostPath:
@@ -14,10 +14,9 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-pvc
-  namespace: keshava-project
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 2Gi  
+      storage: 2Gi
