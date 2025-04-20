@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: fastapi-backend
+  namespace: keshava-project
 spec:
   replicas: 1
   selector:
@@ -13,10 +14,26 @@ spec:
         app: fastapi-backend
     spec:
       containers:
-        - name: fastapi
-          image: ayuleshava/backend-app:latest  
-          ports:
-            - containerPort: 8000
-          env:
-            - name: DATABASE_URL
-              value: "postgresql://postgres:password@postgres-service:5432/mydb"
+      - name: fastapi
+        image: ayuleshava/backend-app:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: fastapi-secret
+              key: DATABASE_URL
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 3
+          periodSeconds: 5
