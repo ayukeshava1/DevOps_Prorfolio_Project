@@ -1,15 +1,15 @@
 pipeline {
-    agent { label 'slave2' }  // Runs only on slave2
+    agent { label 'slave1' }  // Runs only on slave1
 
     environment {
-        IMAGE_NAME = "ayuleshava/backend-app"
+        IMAGE_NAME = "ayuleshava/frontend-app"
     }
 
     stages {
         stage('Cleanup') {
             steps {
                 script {
-                    sh 'docker system prune -f'  // Clears unused images
+                    sh 'docker system prune -f'
                 }
             }
         }
@@ -22,7 +22,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                dir('backend') {
+                dir('frontend') {
                     script {
                         docker.build("${IMAGE_NAME}:latest")
                     }
@@ -43,8 +43,7 @@ pipeline {
 
     post {
         failure {
-            echo "Backend pipeline failed!"
+            echo "Frontend pipeline failed!"
         }
     }
 }
-
