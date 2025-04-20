@@ -4,9 +4,9 @@ metadata:
   name: fastapi-service
 spec:
   selector:
-    app: fastapi-backend
+    app: fastapi-backend  # Make sure this matches the label in your FastAPI pod definition
   ports:
     - protocol: TCP
-      port: 8000
-      targetPort: 8000
-  type: ClusterIP
+      port: 8000           # Port exposed by the service
+      targetPort: 8000     # Port inside the pod where FastAPI is listening
+  type: ClusterIP         # Default type for internal communication within the cluster
