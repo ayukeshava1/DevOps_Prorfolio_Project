@@ -3,19 +3,26 @@ kind: Ingress
 metadata:
   name: devops-star-ingress
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/disable-validation: "true"  # Temporarily disable webhook validation
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: SAMEORIGIN";
+      more_set_headers "X-Content-Type-Options: nosniff";
 spec:
+  ingressClassName: nginx
   rules:
-  - http:
+  - host: example.com  # If using a custom domain, specify it here
+    http:
       paths:
-      - path: /api/
+      - path: /api/(.*)
         pathType: Prefix
         backend:
           service:
             name: fastapi-service
             port:
               number: 8000
-      - path: /  # This catches all other traffic, adjust if necessary
+      - path: /
         pathType: Prefix
         backend:
           service:
