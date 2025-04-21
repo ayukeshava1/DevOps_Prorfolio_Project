@@ -71,6 +71,8 @@ pipeline {
                     kubectl delete ns ${NAMESPACE} --timeout=30s || true
 
                     # Ensure namespace is actually deleted before exiting
+                    kubectl get ns ${NAMESPACE} -o json | jq '.spec.finalizers=[]' | kubectl replace --raw "/api/v1/namespaces/${NAMESPACE}/finalize" -f - || true
+
                     kubectl wait --for=delete ns ${NAMESPACE} --timeout=30s || true
                 """
             }
