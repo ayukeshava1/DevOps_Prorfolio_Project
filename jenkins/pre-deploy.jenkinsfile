@@ -68,12 +68,13 @@ pipeline {
                     kubectl delete all --all -n ${NAMESPACE} || true
                     
                     # Prevent hanging namespace deletion by adding timeout
-                    kubectl delete ns ${NAMESPACE} --timeout=30s || true
+                    kubectl delete ns ${NAMESPACE} --wait=false || true
+                    sleep 10
 
                     # Ensure namespace is actually deleted before exiting
                     kubectl get ns ${NAMESPACE} -o json | jq '.spec.finalizers=[]' | kubectl replace --raw "/api/v1/namespaces/${NAMESPACE}/finalize" -f - || true
 
-                    kubectl wait --for=delete ns ${NAMESPACE} --timeout=30s || true
+                    kubectl wait --for=delete ns ${NAMESPACE} --timeout=60s || true
                 """
             }
         }
