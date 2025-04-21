@@ -2,22 +2,23 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: devops-star-ingress
+  namespace: keshava-project  # Add your namespace if different
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$1
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/disable-validation: "true"  # Bypass webhook validation to prevent failure
+    nginx.ingress.kubernetes.io/disable-validation: "true"
     nginx.ingress.kubernetes.io/configuration-snippet: |
       more_set_headers "X-Frame-Options: SAMEORIGIN";
       more_set_headers "X-Content-Type-Options: nosniff";
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"  # Ensures HTTPS redirection doesn't interfere
-    nginx.ingress.kubernetes.io/use-regex: "true"  # Enables regex-based routing for better matching
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   ingressClassName: nginx
   rules:
-  - host: example.com  # Replace with your actual domain if applicable
+  - host: example.com  # Replace this with your domain or use <NodeIP> if testing
     http:
       paths:
-      - path: /api/(.*)  # Regex-based path handling
+      - path: /api/(.*)
         pathType: ImplementationSpecific
         backend:
           service:
