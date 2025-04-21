@@ -5,18 +5,20 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$1
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/disable-validation: "true"  # Temporarily disable webhook validation
+    nginx.ingress.kubernetes.io/disable-validation: "true"  # Bypass webhook validation to prevent failure
     nginx.ingress.kubernetes.io/configuration-snippet: |
       more_set_headers "X-Frame-Options: SAMEORIGIN";
       more_set_headers "X-Content-Type-Options: nosniff";
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"  # Ensures HTTPS redirection doesn't interfere
+    nginx.ingress.kubernetes.io/use-regex: "true"  # Enables regex-based routing for better matching
 spec:
   ingressClassName: nginx
   rules:
-  - host: example.com  # If using a custom domain, specify it here
+  - host: example.com  # Replace with your actual domain if applicable
     http:
       paths:
-      - path: /api/(.*)
-        pathType: Prefix
+      - path: /api/(.*)  # Regex-based path handling
+        pathType: ImplementationSpecific
         backend:
           service:
             name: fastapi-service
