@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'slave2' }  // Runs only on slave2
+    agent { label 'slave1' }  // Runs only on slave2
 
     environment {
         IMAGE_NAME = "your-dockerhub-username/frontend-app"  // Replace with your Docker Hub repository
