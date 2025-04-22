@@ -35,12 +35,12 @@ spec:
           subPath: pgdata
         livenessProbe:
           exec:
-            command: ["pg_isready", "-U", "postgres"]
+            command: ["pg_isready", "-U", "$(POSTGRES_USER)"]
           initialDelaySeconds: 10
           periodSeconds: 10
         readinessProbe:
           exec:
-            command: ["pg_isready", "-U", "postgres"]
+            command: ["pg_isready", "-U", "$(POSTGRES_USER)"]
           initialDelaySeconds: 5
           periodSeconds: 5
       volumes:

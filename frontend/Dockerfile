@@ -1,19 +1,17 @@
 # Stage 1: Build React App
-FROM node:18-alpine AS builder
+FROM node:18 AS builder
 
-# Optimize Node.js memory usage
+# Optimize memory usage
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Set working directory
 WORKDIR /app
 
-# Copy only package files for better caching of dependency installation
+# Copy only package files for dependency caching
 COPY package.json package-lock.json ./
 
-# Install dependencies efficiently
-RUN npm ci --only=production
+RUN npm install
 
-# Copy the application source code
+# Copy the full application code
 COPY . .
 
 # Build the React app
@@ -25,18 +23,11 @@ FROM nginx:alpine
 # Remove default Nginx static files
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy built React app from the previous stage
-COPY --from=builder /app/build /usr/share/nginx/html
+# Optional: Include custom Nginx config if needed
+# COPY nginx.conf /etc/nginx/nginx.conf
 
-# Add Nginx configuration for React Router
-RUN echo 'server { \
-    listen 80; \
-    root /usr/share/nginx/html; \
-    index index.html; \
-    location / { \
-        try_files $uri /index.html; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+# Copy build files from the previous stage
+COPY --from=builder /app/build /usr/share/nginx/html
 
 # Expose port 80
 EXPOSE 80

@@ -2,30 +2,20 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: devops-star-ingress
-  namespace: keshava-project
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/disable-validation: "true"
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      more_set_headers "X-Frame-Options: SAMEORIGIN";
-      more_set_headers "X-Content-Type-Options: nosniff";
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
-  ingressClassName: nginx
   rules:
-  - host: <NodeIP or your domain>
-    http:
+  - http:
       paths:
-      - path: /api/(.*)
-        pathType: ImplementationSpecific
+      - path: /api/
+        pathType: Prefix
         backend:
           service:
             name: fastapi-service
             port:
               number: 8000
-      - path: /
+      - path: /  # This catches all other traffic, adjust if necessary
         pathType: Prefix
         backend:
           service:

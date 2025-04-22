@@ -8,8 +8,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/mnt/data"  # Ensure this path exists on the node
-  persistentVolumeReclaimPolicy: Retain
+    path: "/mnt/data"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -21,4 +20,3 @@ spec:
   resources:
     requests:
       storage: 2Gi
-  storageClassName: manual  # Can be omitted if not using dynamic provisioning

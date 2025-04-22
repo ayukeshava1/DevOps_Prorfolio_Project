@@ -4,11 +4,10 @@ metadata:
   name: fastapi-service
   namespace: keshava-project
 spec:
-  type: NodePort  # Change to NodePort
   selector:
     app: fastapi-backend
   ports:
-  - protocol: TCP
-    port: 8000       # Service port (internal cluster)
-    targetPort: 8000 # Container port
-    nodePort: 31000  # Custom NodePort (must be between 30000-32767)
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: NodePort  # Change if needed (NodePort or LoadBalancer)

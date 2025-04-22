@@ -21,14 +21,14 @@ pipeline {
 
         stage('Pre-Build: Apply Kubernetes Manifests') {
             steps {
-                withCredentials([file(credentialsId: KUBE_CONFIG_CREDENTIAL_ID, variable: 'KUBECONFIG_FILE')]) {
+                withCredentials([file(credentialsId: "${KUBE_CONFIG_CREDENTIAL_ID}", variable: 'KUBECONFIG_FILE')]) {
                     script {
                         try {
                             sh """
                                 set -e  # Stop execution on error
 
-                                export KUBECONFIG="$KUBECONFIG_FILE"  # Safer secret handling
-
+                                export KUBECONFIG=${KUBECONFIG_FILE}
+                                
                                 # Ensure namespace exists
                                 kubectl get ns ${NAMESPACE} || kubectl create namespace ${NAMESPACE}
 
@@ -37,6 +37,7 @@ pipeline {
                                 kubectl apply -n ${NAMESPACE} -f k8s/fastapi-secret.yaml
 
                                 # Apply storage configurations
+                                kubectl apply -n ${NAMESPACE} -f k8s/postgres-pv.yaml
                                 kubectl apply -n ${NAMESPACE} -f k8s/postgres-pvc.yaml
 
                                 # Apply Ingress routing setup
@@ -60,21 +61,13 @@ pipeline {
         failure {
             echo "⚠️ Pre-Build failed — cleaning up environment..."
 
-            withCredentials([file(credentialsId: KUBE_CONFIG_CREDENTIAL_ID, variable: 'KUBECONFIG_FILE')]) {
+            withCredentials([file(credentialsId: "${KUBE_CONFIG_CREDENTIAL_ID}", variable: 'KUBECONFIG_FILE')]) {
                 sh """
-                    export KUBECONFIG="$KUBECONFIG_FILE"
+                    export KUBECONFIG=$KUBECONFIG_FILE
 
                     # Cleanup pre-build resources if setup fails
                     kubectl delete all --all -n ${NAMESPACE} || true
-                    
-                    # Prevent hanging namespace deletion by adding timeout
-                    kubectl delete ns ${NAMESPACE} --wait=false || true
-                    sleep 10
-
-                    # Ensure namespace is actually deleted before exiting
-                    kubectl get ns ${NAMESPACE} -o json | jq '.spec.finalizers=[]' | kubectl replace --raw "/api/v1/namespaces/${NAMESPACE}/finalize" -f - || true
-
-                    kubectl wait --for=delete ns ${NAMESPACE} --timeout=60s || true
+                    kubectl delete ns ${NAMESPACE} || true
                 """
             }
         }
