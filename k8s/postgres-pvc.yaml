@@ -9,7 +9,7 @@ spec:
     - ReadWriteOnce
   hostPath:
     path: "/mnt/data"  # Ensure this path exists on the node
-  persistentVolumeReclaimPolicy: Retain  # Add reclaim policy
+  persistentVolumeReclaimPolicy: Retain
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
