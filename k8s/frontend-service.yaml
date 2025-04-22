@@ -4,10 +4,11 @@ metadata:
   name: react-service
   namespace: keshava-project
 spec:
+  type: NodePort  # Change to NodePort
   selector:
     app: react-frontend
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
-  type: LoadBalancer  # Use NodePort if not on cloud
+  - protocol: TCP
+    port: 80         # Service port (internal cluster)
+    targetPort: 80   # Container port
+    nodePort: 32000  # Custom NodePort (must be between 30000-32767)
