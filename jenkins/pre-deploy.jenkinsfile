@@ -66,7 +66,11 @@ pipeline {
 
                     # Cleanup pre-build resources if setup fails
                     kubectl delete all --all -n ${NAMESPACE} || true
-                    kubectl delete ns ${NAMESPACE} || true
+                    kubectl delete ns ${NAMESPACE} --wait=false || true
+                    sleep 10
+
+                    kubectl get ns ${NAMESPACE} -o json | jq '.spec.finalizers=[]' | kubectl replace --raw "/api/v1/namespaces/${NAMESPACE}/finalize" -f - || true
+                    kubectl wait --for=delete ns ${NAMESPACE} --timeout=60s || true
                 """
             }
         }
