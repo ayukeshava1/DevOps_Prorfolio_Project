@@ -1,28 +1,21 @@
-# Stage 1: Build React App
-FROM node:18 AS builder
+# Base image
+FROM node:18-alpine
 
-# Increase memory limit for Node.js
-ENV NODE_OPTIONS=--max_old_space_size=4096
-
+# Set working directory
 WORKDIR /app
 
-# Copy dependencies first
-COPY package*.json ./
-
+# Copy package.json and install dependencies
+COPY package.json package-lock.json ./
 RUN npm install
 
-# Then copy the rest of the app
+# Copy the rest of the application code
 COPY . .
 
+# Build the React app
 RUN npm run build
 
-# Stage 2: Serve with Nginx
-FROM nginx:alpine
+# Expose port 3000
+EXPOSE 3000
 
-RUN rm -rf /usr/share/nginx/html/*
-
-COPY --from=builder /app/build /usr/share/nginx/html
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+# Start the application
+CMD ["npm", "run", "start"]
