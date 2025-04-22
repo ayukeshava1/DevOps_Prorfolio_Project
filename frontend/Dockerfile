@@ -10,10 +10,12 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Install dependencies efficiently
-RUN npm install --frozen-lockfile
+RUN npm ci
 
-# Copy the full application code
-COPY . .
+# Copy only required files for the build
+COPY src ./src
+COPY public ./public
+COPY .env .env
 
 # Build the React app
 RUN npm run build
