@@ -35,15 +35,15 @@ spec:
           subPath: pgdata
         livenessProbe:
           exec:
-            command: ["pg_isready", "-U", "$(POSTGRES_USER)"]
+            command: ["pg_isready", "-U", "postgres"]
           initialDelaySeconds: 10
           periodSeconds: 10
         readinessProbe:
           exec:
-            command: ["pg_isready", "-U", "$(POSTGRES_USER)"]
+            command: ["pg_isready", "-U", "postgres"]
           initialDelaySeconds: 5
           periodSeconds: 5
       volumes:
       - name: postgres-storage
         persistentVolumeClaim:
-          claimName: postgres-pvc  # Correct reference to PVC
+          claimName: postgres-pvc
