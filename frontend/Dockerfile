@@ -16,9 +16,6 @@ RUN npm ci
 COPY src ./src
 COPY public ./public
 
-# Optional: Copy .env file if it exists
-COPY .env .env
-
 # Build the React app
 RUN npm run build
 
