@@ -17,20 +17,22 @@
 # CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 
+# Use a specific Python version
 FROM python:3.10
 
-# Set working directory
+# Set the working directory
 WORKDIR /app
 
-# Copy and install dependencies
-COPY requirements.txt .
+# Install dependencies from requirements.txt
+COPY requirements.txt . 
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the FastAPI app
+# Copy the application code into the container
 COPY app/ /app
 
-# Expose FastAPI port
+# Expose port 8000 for FastAPI
 EXPOSE 8000
 
-# Optimize Uvicorn startup for performance
+# Run the FastAPI app with Uvicorn, optimized for production with multiple workers
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+
