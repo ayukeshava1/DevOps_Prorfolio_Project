@@ -25,15 +25,27 @@ spec:
             secretKeyRef:
               name: fastapi-secret
               key: DATABASE_URL
+
+        # ✅ Added startupProbe
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          failureThreshold: 30
+          periodSeconds: 5
+
+        # ✅ Liveness with delay
         livenessProbe:
           httpGet:
             path: /health
             port: 8000
-          initialDelaySeconds: 5
+          initialDelaySeconds: 30
           periodSeconds: 10
+
+        # ✅ Readiness with shorter delay
         readinessProbe:
           httpGet:
             path: /health
             port: 8000
-          initialDelaySeconds: 3
+          initialDelaySeconds: 5
           periodSeconds: 5
