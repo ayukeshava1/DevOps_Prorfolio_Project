@@ -20,10 +20,13 @@
 # Use a specific Python version
 FROM python:3.10
 
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+
 # Set the working directory
 WORKDIR /app
 
-# Install dependencies from requirements.txt
+# Copy and install dependencies
 COPY requirements.txt . 
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -35,4 +38,3 @@ EXPOSE 8000
 
 # Run the FastAPI app with Uvicorn, optimized for production with multiple workers
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
-
