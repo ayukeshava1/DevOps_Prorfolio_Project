@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: devops-star-ingress
-  namespace: keshava-project  # Add your namespace if different
+  namespace: keshava-project
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$1
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
@@ -15,7 +15,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: example.com  # Replace this with your domain or use <NodeIP> if testing
+  - host: <NodeIP or your domain>
     http:
       paths:
       - path: /api/(.*)
