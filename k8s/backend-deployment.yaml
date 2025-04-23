@@ -1,39 +1,45 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fastapi-backend
-  namespace: keshava-project
+  name: backend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: fastapi-backend
+      app: backend
   template:
     metadata:
       labels:
-        app: fastapi-backend
+        app: backend
     spec:
       containers:
-      - name: fastapi
-        image: ayuleshava/backend-app:latest
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8000
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: fastapi-secret
-              key: DATABASE_URL
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8000
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 8000
-          initialDelaySeconds: 3
-          periodSeconds: 5
+        - name: backend
+          image: your-dockerhub-username/backend:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DB_HOST
+              value: postgres-service
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: postgres
+            - name: DB_NAME
+              value: yourdbname
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: password
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 8000
+      targetPort: 8000
