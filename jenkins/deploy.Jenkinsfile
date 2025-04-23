@@ -2,9 +2,10 @@ pipeline {
     agent any
 
     stages {
-        stage('Clone Repo') {
+        stage('Checkout') {
             steps {
-                git credentialsId: 'github-cread', url: 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
+                // Git checkout using the 'main' branch without credentialsId (assuming it's a public repo)
+                git branch: 'main', url: 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
             }
         }
 
