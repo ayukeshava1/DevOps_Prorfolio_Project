@@ -1,48 +1,29 @@
 pipeline {
-    agent { label 'master' }  // Use Jenkins master node for kubectl
-
-    environment {
-        KUBE_CONFIG_CREDENTIAL_ID = 'k8s-kubeconfig'  // Jenkins kubeconfig credential ID
-        NAMESPACE = 'keshava-project'  // Kubernetes namespace
-        REPO_URL = 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
-        REPO_FOLDER = 'DevOps_Prorfolio_Project'
-    }
+    agent any
 
     stages {
-        stage('Checkout Repo') {
+        stage('Clone Repo') {
             steps {
-                script {
-                    if (!fileExists(REPO_FOLDER)) {
-                        git branch: 'main', url: REPO_URL
-                    }
-                }
+                git credentialsId: 'github-cread', url: 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
             }
         }
 
-        stage('Deploy Kubernetes Services & Applications') {
+        stage('Approve Deployment') {
             steps {
-                withCredentials([file(credentialsId: "${KUBE_CONFIG_CREDENTIAL_ID}", variable: 'KUBECONFIG_FILE')]) {
-                    script {
-                        try {
-                            sh """
-                                set -e  # Stop execution on error
-                                export KUBECONFIG=${KUBECONFIG_FILE}
+                input message: '✅ Approve to deploy latest images to K8s cluster?'
+            }
+        }
 
-                                # Deploy PostgreSQL resources
-                                kubectl apply -n ${NAMESPACE} -f k8s/postgres-deployment.yaml
-                                kubectl apply -n ${NAMESPACE} -f k8s/postgres-service.yaml
-
-                                # Deploy FastAPI backend
-                                kubectl apply -n ${NAMESPACE} -f k8s/backend-deployment.yaml
-                                kubectl apply -n ${NAMESPACE} -f k8s/backend-service.yaml
-
-                                # Deploy React frontend
-                                kubectl apply -n ${NAMESPACE} -f k8s/frontend-deployment.yaml
-                                kubectl apply -n ${NAMESPACE} -f k8s/frontend-service.yaml
-                            """
-                        } catch (err) {
-                            error("❌ Deployment failed: ${err}")
-                        }
+        stage('Apply K8s YAMLs') {
+            steps {
+                withCredentials([file(credentialsId: 'k8s-kubeconfig', variable: 'KUBECONFIG_FILE')]) {
+                    withEnv(["KUBECONFIG=${KUBECONFIG_FILE}"]) {
+                        sh '''
+                            kubectl apply -f k8s/postgres-deployment.yaml
+                            kubectl apply -f k8s/backend-deployment.yaml
+                            kubectl apply -f k8s/frontend-deployment.yaml
+                            kubectl apply -f k8s/ingress.yaml
+                        '''
                     }
                 }
             }
@@ -50,17 +31,11 @@ pipeline {
     }
 
     post {
+        success {
+            echo "✅ All services deployed successfully 🎉"
+        }
         failure {
-            echo "⚠️ Deployment failed — cleaning up resources..."
-
-            withCredentials([file(credentialsId: "${KUBE_CONFIG_CREDENTIAL_ID}", variable: 'KUBECONFIG_FILE')]) {
-                sh """
-                    export KUBECONFIG=$KUBECONFIG_FILE
-
-                    # Delete all resources in the namespace created by Jenkins
-                    kubectl delete all --all -n ${NAMESPACE} || true
-                """
-            }
+            echo "❌ Deployment failed. Check logs."
         }
     }
 }
