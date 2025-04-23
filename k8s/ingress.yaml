@@ -6,7 +6,7 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   rules:
-    - host: 13.235.247.203.nip.io   # or use NodePort/publicIP.nip.io
+    - host: backend.13.233.88.55.nip.io
       http:
         paths:
           - path: /api(/|$)(.*)
@@ -16,6 +16,9 @@ spec:
                 name: backend-service
                 port:
                   number: 8000
+    - host: frontend.13.233.88.55.nip.io
+      http:
+        paths:
           - path: /?(.*)
             pathType: Prefix
             backend:
