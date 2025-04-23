@@ -8,6 +8,21 @@ data:
 
 ---
 apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard  # This should match the PVC's storageClassName
+  hostPath:
+    path: /data/postgres  # Adjust this path based on your environment
+
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-pvc
@@ -17,6 +32,7 @@ spec:
   resources:
     requests:
       storage: 1Gi
+  storageClassName: standard  # This should match the PV's storageClassName
 
 ---
 apiVersion: apps/v1
