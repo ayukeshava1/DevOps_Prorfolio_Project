@@ -2,28 +2,27 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "ayuleshava/devops-frontend:latest"
+        DOCKER_IMAGE = "ayuleshava/devops-frontend:latest"  // Docker image name
         DOCKER_BUILDKIT = "1"
     }
 
     stages {
-        stage('Clone Repo') {
+        stage('Checkout') {
             steps {
-                git credentialsId: 'main', url: 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
+                // Git checkout using the 'main' branch without credentialsId (using public repo)
+                git branch: 'main', url: 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
             }
         }
 
         stage('Build React App') {
             steps {
                 dir('frontend') {
-                    sh 'npm install'
-                    // Optional: Run build if you later change npm start to npm run build
-                    // sh 'npm run build'
+                    sh 'npm install'  // Install dependencies for the frontend
                 }
             }
         }
 
-        stage('Build Container Image') {
+        stage('Build Docker Image') {
             steps {
                 dir('frontend') {
                     sh '''
@@ -32,7 +31,7 @@ pipeline {
                           --local context=. \
                           --local dockerfile=. \
                           --output type=image,name=${DOCKER_IMAGE},push=true
-                    '''
+                    '''  // Building Docker image and pushing it
                 }
             }
         }
