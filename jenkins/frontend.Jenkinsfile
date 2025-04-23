@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Clone Repo') {
             steps {
-                git credentialsId: 'github-cread', url: 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
+                git credentialsId: 'main', url: 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
             }
         }
 
