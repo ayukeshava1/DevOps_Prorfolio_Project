@@ -6,7 +6,7 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   rules:
-    - host: yourdomain.com   # or use NodePort/publicIP.nip.io
+    - host: 13.235.247.203.nip.io   # or use NodePort/publicIP.nip.io
       http:
         paths:
           - path: /api(/|$)(.*)
