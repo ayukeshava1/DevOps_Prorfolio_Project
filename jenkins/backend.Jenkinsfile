@@ -2,14 +2,15 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "ayuleshava/devops-backend:latest"
+        DOCKER_IMAGE = "ayuleshava/devops-backend:latest"  // Docker image name
         DOCKER_BUILDKIT = "1"
     }
 
     stages {
-        stage('Clone Repo') {
+        stage('Checkout') {
             steps {
-                git credentialsId: 'main', url: 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
+                // Git checkout using the 'main' branch without credentialsId (using public repo)
+                git branch: 'main', url: 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
             }
         }
 
@@ -21,7 +22,7 @@ pipeline {
             }
         }
 
-        stage('Build Container Image') {
+        stage('Build Docker Image') {
             steps {
                 dir('backend') {
                     sh '''
@@ -30,7 +31,7 @@ pipeline {
                           --local context=. \
                           --local dockerfile=. \
                           --output type=image,name=${DOCKER_IMAGE},push=true
-                    '''
+                    '''  // Building Docker image and pushing it
                 }
             }
         }
