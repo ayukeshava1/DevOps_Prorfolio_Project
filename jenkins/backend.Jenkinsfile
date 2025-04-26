@@ -12,20 +12,6 @@ pipeline {
             }
         }
 
-        stage('Build & Install Dependencies') {
-            steps {
-                script {
-                    echo '⚙️ Setting up Python virtual environment...'
-                    dir('backend') {
-                        sh '''
-                            python3 -m venv venv
-                            . venv/bin/activate
-                            pip install -r requirements.txt
-                        '''
-                    }
-                }
-            }
-        }
 
         stage('Build Docker Image') {
             steps {
