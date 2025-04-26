@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'master' }
+    agent { label 'slave1' }
 
     environment {
         DOCKER_IMAGE = "ayuleshava/devops-frontend:latest"
