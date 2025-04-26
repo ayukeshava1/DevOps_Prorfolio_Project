@@ -10,17 +10,13 @@ pipeline {
             }
         }
 
-        stage('Build Image with BuildKit') {
+        stage('Build Image with Docker CLI') {
             steps {
                 dir('frontend') {
                     script {
-                        echo 'Building image with buildctl...'
+                        echo 'Building image with Docker CLI...'
                         sh '''
-                            buildctl build \
-                            --frontend dockerfile.v0 \
-                            --local context=. \
-                            --local dockerfile=. \
-                            --output type=image,name=ayuleshava/frontend-app:latest,push=false
+                            docker build -t ayuleshava/frontend-app:latest .
                         '''
                     }
                 }
@@ -32,15 +28,12 @@ pipeline {
                 dir('frontend') {
                     script {
                         echo 'Pushing image to registry...'
-                        sh """
-                            buildctl build \
-                            --frontend dockerfile.v0 \
-                            --local context=. \
-                            --local dockerfile=. \
-                            --output type=image,name=ayuleshava/frontend-app:latest,push=true \
-                            --build-arg DOCKER_USERNAME=${DOCKERHUB_CREDS_USR} \
-                            --build-arg DOCKER_PASSWORD=${DOCKERHUB_CREDS_PSW}
-                        """
+                        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                            sh """
+                                echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin
+                                docker push ayuleshava/frontend-app:latest
+                            """
+                        }
                     }
                 }
             }
