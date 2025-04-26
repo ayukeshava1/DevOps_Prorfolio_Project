@@ -12,22 +12,36 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Image with BuildKit') {
             steps {
                 dir('frontend') {
                     script {
-                        docker.build("${IMAGE_NAME}:latest")
+                        // Using buildctl to build the image with BuildKit
+                        sh '''
+                            echo "Building image with buildctl..."
+                            buildctl build \
+                                --frontend dockerfile.v0 \
+                                --local context=. \
+                                --local dockerfile=. \
+                                --output type=image,name=${IMAGE_NAME}:latest,push=false
+                        '''
                     }
                 }
             }
         }
 
-        stage('Push to DockerHub') {
+        stage('Push to Registry') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-creds') {
-                        docker.image("${IMAGE_NAME}:latest").push()
-                    }
+                    // Push the image to the registry (DockerHub in this case)
+                    sh '''
+                        echo "Pushing image to registry..."
+                        buildctl build \
+                            --frontend dockerfile.v0 \
+                            --local context=. \
+                            --local dockerfile=. \
+                            --output type=image,name=${IMAGE_NAME}:latest,push=true
+                    '''
                 }
             }
         }
