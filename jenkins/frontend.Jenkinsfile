@@ -1,14 +1,12 @@
 pipeline {
-    agent { label 'slave1' }
-
+    agent any
     environment {
-        IMAGE_NAME = "ayuleshava/frontend-app"
+        DOCKERHUB_CREDS = credentials('dockerhub-creds')  // DockerHub credentials
     }
-
     stages {
-        stage('Checkout') {
+        stage('Declarative: Checkout SCM') {
             steps {
-                git branch: 'main', url: 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
+                checkout scm
             }
         }
 
@@ -16,14 +14,13 @@ pipeline {
             steps {
                 dir('frontend') {
                     script {
-                        echo "Building image with buildctl..."
-                        // Ensure the Dockerfile is in the correct path
+                        echo 'Building image with buildctl...'
                         sh '''
                             buildctl build \
-                                --frontend dockerfile.v0 \
-                                --local context=. \
-                                --local dockerfile=. \
-                                --output type=image,name=${IMAGE_NAME}:latest,push=false
+                            --frontend dockerfile.v0 \
+                            --local context=. \
+                            --local dockerfile=. \
+                            --output type=image,name=ayuleshava/frontend-app:latest,push=false
                         '''
                     }
                 }
@@ -34,15 +31,16 @@ pipeline {
             steps {
                 dir('frontend') {
                     script {
-                        echo "Pushing image to registry..."
-                        // Ensure the Dockerfile is in the correct path
-                        sh '''
+                        echo 'Pushing image to registry...'
+                        sh """
                             buildctl build \
-                                --frontend dockerfile.v0 \
-                                --local context=. \
-                                --local dockerfile=. \
-                                --output type=image,name=${IMAGE_NAME}:latest,push=true
-                        '''
+                            --frontend dockerfile.v0 \
+                            --local context=. \
+                            --local dockerfile=. \
+                            --output type=image,name=ayuleshava/frontend-app:latest,push=true \
+                            --build-arg DOCKER_USERNAME=${DOCKERHUB_CREDS_USR} \
+                            --build-arg DOCKER_PASSWORD=${DOCKERHUB_CREDS_PSW}
+                        """
                     }
                 }
             }
@@ -50,11 +48,8 @@ pipeline {
     }
 
     post {
-        success {
-            echo "✅ Successfully built and pushed ${IMAGE_NAME}:latest"
-        }
-        failure {
-            echo "❌ Build failed!"
+        always {
+            echo '❌ Build failed!'
         }
     }
 }
