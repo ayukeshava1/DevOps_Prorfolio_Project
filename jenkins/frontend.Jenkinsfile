@@ -2,8 +2,7 @@ pipeline {
     agent { label 'slave1' }
 
     environment {
-        DOCKER_IMAGE = "ayuleshava/frontend-app:latest"
-        DOCKER_BUILDKIT = "1"
+        IMAGE_NAME = "ayuleshava/frontend-app"
     }
 
     stages {
@@ -13,16 +12,22 @@ pipeline {
             }
         }
 
-        stage('Build and Push Docker Image') {
+        stage('Build Docker Image') {
             steps {
                 dir('frontend') {
-                    sh '''
-                        buildctl build \
-                          --frontend dockerfile.v0 \
-                          --local context=. \
-                          --local dockerfile=. \
-                          --output type=image,name=${DOCKER_IMAGE},push=true
-                    '''
+                    script {
+                        docker.build("${IMAGE_NAME}:latest")
+                    }
+                }
+            }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-creds') {
+                        docker.image("${IMAGE_NAME}:latest").push()
+                    }
                 }
             }
         }
@@ -30,10 +35,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Frontend image built and pushed: ${DOCKER_IMAGE}"
+            echo "✅ Successfully built and pushed ${IMAGE_NAME}:latest"
         }
         failure {
-            echo "❌ Build failed"
+            echo "❌ Build failed!"
         }
     }
 }
