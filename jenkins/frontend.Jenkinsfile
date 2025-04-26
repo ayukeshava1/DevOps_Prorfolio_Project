@@ -16,9 +16,9 @@ pipeline {
             steps {
                 dir('frontend') {
                     script {
-                        // Using buildctl to build the image with BuildKit
+                        echo "Building image with buildctl..."
+                        // Ensure the Dockerfile is in the correct path
                         sh '''
-                            echo "Building image with buildctl..."
                             buildctl build \
                                 --frontend dockerfile.v0 \
                                 --local context=. \
@@ -32,16 +32,18 @@ pipeline {
 
         stage('Push to Registry') {
             steps {
-                script {
-                    // Push the image to the registry (DockerHub in this case)
-                    sh '''
+                dir('frontend') {
+                    script {
                         echo "Pushing image to registry..."
-                        buildctl build \
-                            --frontend dockerfile.v0 \
-                            --local context=. \
-                            --local dockerfile=. \
-                            --output type=image,name=${IMAGE_NAME}:latest,push=true
-                    '''
+                        // Ensure the Dockerfile is in the correct path
+                        sh '''
+                            buildctl build \
+                                --frontend dockerfile.v0 \
+                                --local context=. \
+                                --local dockerfile=. \
+                                --output type=image,name=${IMAGE_NAME}:latest,push=true
+                        '''
+                    }
                 }
             }
         }
