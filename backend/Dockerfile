@@ -1,11 +1,11 @@
-FROM python:3.10-slim
+FROM python:3.10
 
 WORKDIR /app
 
 COPY requirements.txt ./
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-COPY . .
+COPY app/ /app
 
 EXPOSE 8000
 
