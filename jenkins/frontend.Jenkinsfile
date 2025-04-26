@@ -1,39 +1,37 @@
 pipeline {
     agent any
+
     environment {
-        DOCKERHUB_CREDS = credentials('dockerhub-creds')  // DockerHub credentials
+        DOCKERHUB_CREDS = credentials('dockerhub-creds') // DockerHub credentials (from Jenkins)
     }
+
     stages {
-        stage('Declarative: Checkout SCM') {
+        stage('Checkout Source Code') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Build Image with Docker CLI') {
+        stage('Build Docker Image') {
             steps {
-                dir('frontend') {
-                    script {
-                        echo 'Building image with Docker CLI...'
-                        sh '''
-                            docker build -t ayuleshava/frontend-app:latest .
-                        '''
+                script {
+                    echo '🔨 Building Docker image...'
+                    dir('frontend') {
+                        sh 'docker build -t ayuleshava/frontend-app:latest .'
                     }
                 }
             }
         }
 
-        stage('Push to Registry') {
+        stage('Push Docker Image') {
             steps {
-                dir('frontend') {
-                    script {
-                        echo 'Pushing image to registry...'
-                        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                            sh """
-                                echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin
-                                docker push ayuleshava/frontend-app:latest
-                            """
-                        }
+                script {
+                    echo '📦 Pushing Docker image to DockerHub...'
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh '''
+                            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                            docker push ayuleshava/frontend-app:latest
+                        '''
                     }
                 }
             }
@@ -41,8 +39,11 @@ pipeline {
     }
 
     post {
-        always {
-            echo '❌ Build failed!'
+        success {
+            echo '✅ Build and Push completed successfully!'
+        }
+        failure {
+            echo '❌ Build or Push failed!'
         }
     }
 }
