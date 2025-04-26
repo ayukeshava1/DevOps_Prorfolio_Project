@@ -2,7 +2,7 @@ pipeline {
     agent { label 'slave1' }
 
     environment {
-        DOCKER_IMAGE = "ayuleshava/devops-frontend:latest"
+        DOCKER_IMAGE = "ayuleshava/frontend-app:latest"
         DOCKER_BUILDKIT = "1"
     }
 
