@@ -20,8 +20,6 @@ pipeline {
                 withCredentials([file(credentialsId: 'k8s-kubeconfig', variable: 'KUBECONFIG_FILE')]) {
                     withEnv(["KUBECONFIG=${KUBECONFIG_FILE}"]) {
                         sh '''
-                            kubectl apply -f k8s/postgres-deployment.yaml
-                            kubectl apply -f k8s/backend-deployment.yaml
                             kubectl apply -f k8s/frontend-deployment.yaml
                             kubectl apply -f k8s/ingress.yaml
                         '''
