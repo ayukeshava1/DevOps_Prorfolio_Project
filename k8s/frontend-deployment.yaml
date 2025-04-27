@@ -15,6 +15,7 @@ spec:
       containers:
         - name: frontend
           image: ayuleshava/frontend-app:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
 
