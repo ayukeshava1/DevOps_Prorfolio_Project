@@ -1,9 +1,7 @@
-// ✅ Updated Navbar.jsx
 import React, { useState } from 'react';
-import { Link, useLocation, useHistory } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaHome, FaUser, FaPenNib, FaEnvelope, FaBars, FaSignOutAlt } from 'react-icons/fa';
-import { useAuth } from '../contexts/AuthContext';
+import { FaHome, FaUser, FaPenNib, FaEnvelope, FaBars } from 'react-icons/fa';
 import './Navbar.css';
 
 const navItems = [
@@ -15,16 +13,9 @@ const navItems = [
 
 const Navbar = () => {
   const location = useLocation();
-  const history = useHistory();
   const [menuOpen, setMenuOpen] = useState(false);
-  const { user, logout } = useAuth();
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
-
-  const handleLogout = () => {
-    logout();
-    history.push('/login');
-  };
 
   return (
     <motion.nav
@@ -40,7 +31,7 @@ const Navbar = () => {
       </div>
 
       <ul className={`nav-links ${menuOpen ? 'open' : ''}`}>
-        {user && navItems.map((item) => (
+        {navItems.map((item) => (
           <li key={item.path} className={location.pathname === item.path ? 'active' : ''}>
             <Link to={item.path}>
               {item.icon}
@@ -55,19 +46,6 @@ const Navbar = () => {
             </Link>
           </li>
         ))}
-
-        {user ? (
-          <li>
-            <button onClick={handleLogout} className="logout-btn">
-              <FaSignOutAlt /> <span>Logout</span>
-            </button>
-          </li>
-        ) : (
-          <>
-            <li><Link to="/login">Login</Link></li>
-            <li><Link to="/register">Register</Link></li>
-          </>
-        )}
       </ul>
     </motion.nav>
   );

@@ -4,14 +4,12 @@ import { fetchBlogs } from '../api/blogApi';
 import BlogCard from '../components/BlogCard';
 import { motion } from 'framer-motion';
 import { PlusCircle } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
 import './Home.css';
 
 const Home = () => {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const history = useHistory();
-  const { user } = useAuth();
 
   useEffect(() => {
     const loadBlogs = async () => {
@@ -31,8 +29,6 @@ const Home = () => {
     history.push('/create');
   };
 
-  const userBlogs = blogs.filter((blog) => blog.author_id === user?.id);
-
   return (
     <div className="home-wrapper">
       {/* Hero Section */}
@@ -47,29 +43,27 @@ const Home = () => {
       </motion.div>
 
       {/* Create Blog Button */}
-      {user && (
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="create-blog-button pulse"
-          onClick={handleCreateBlog}
-        >
-          <PlusCircle className="icon" size={20} />
-          Create Blog
-        </motion.button>
-      )}
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="create-blog-button pulse"
+        onClick={handleCreateBlog}
+      >
+        <PlusCircle className="icon" size={20} />
+        Create Blog
+      </motion.button>
 
       {/* Blog Section */}
       {loading ? (
         <div className="loader">Loading your blogs...</div>
-      ) : userBlogs.length === 0 ? (
+      ) : blogs.length === 0 ? (
         <motion.div
           className="no-blogs"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <p>✨ You haven't posted anything yet. Start sharing your brilliance!</p>
+          <p>✨ No blogs found. Start sharing your brilliance!</p>
         </motion.div>
       ) : (
         <motion.div
@@ -84,7 +78,7 @@ const Home = () => {
             },
           }}
         >
-          {userBlogs.map((blog) => (
+          {blogs.map((blog) => (
             <motion.div
               key={blog.id}
               className="card-wrapper"

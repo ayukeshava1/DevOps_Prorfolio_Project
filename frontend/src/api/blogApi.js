@@ -1,8 +1,7 @@
 // File: /api/blogApi.js
 import axios from 'axios';
 
-// Just use '/api' as baseURL — Ingress will route this to backend
-const API = axios.create({ baseURL: '/api' });
+const API = axios.create({ baseURL: 'http://localhost:8000/api' });
 
 export const fetchBlogs = () => API.get('/blogs/');
 export const getBlogById = (id) => API.get(`/blogs/${id}`);
@@ -21,3 +20,4 @@ API.interceptors.request.use((req) => {
 // Auth
 export const registerUser = (data) => API.post('/users/register', data);
 export const loginUser = (data) => API.post('/users/login', data);
+
