@@ -3,9 +3,11 @@ kind: Ingress
 metadata:
   name: app-ingress
   namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-  - host: my-web-app.local  # You can use a custom internal domain
+  - host: 13.232.104.10 # your external IP or domain
     http:
       paths:
       - path: /
