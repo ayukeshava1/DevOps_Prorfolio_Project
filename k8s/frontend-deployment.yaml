@@ -26,10 +26,11 @@ metadata:
   name: frontend-service
   namespace: default
 spec:
-  ports:
-  - port: 80
-    targetPort: 8080
   selector:
     app: frontend
-  type: ClusterIP  # Ensure this is ClusterIP for internal access
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80   # <<< Corrected here
+  type: ClusterIP
 
