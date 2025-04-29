@@ -25,12 +25,13 @@ kind: Service
 metadata:
   name: frontend-service
   namespace: default
+  labels:
+    run: frontend
 spec:
   selector:
     app: frontend
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 80   # <<< Corrected here
   type: ClusterIP
 
