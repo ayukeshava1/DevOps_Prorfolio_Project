@@ -33,5 +33,5 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-  type: ClusterIP
+  type: NodePort
 
