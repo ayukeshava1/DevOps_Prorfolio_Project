@@ -36,71 +36,71 @@ GitHub (main/dev) ─▶ Jenkins ─▶ Terraform ─▶ Ansible ─▶ Docker �
 
 
 ## 📁 Monorepo Name: devops-portfolio-pipeline
+        devops-portfolio-pipeline/
+ ├── frontend/
+ │   ├── src/
+ │   │   └── index.jsx
+ │   └── Dockerfile
 
-devops-portfolio-pipeline/
-├── frontend/
-│   ├── src/
-│   │   └── index.jsx
-│   └── Dockerfile
+ ├── backend/
+ │   ├── app/
+ │   │   └── main.py
+ │   └── Dockerfile
 
-├── backend/
-│   ├── app/
-│   │   └── main.py
-│   └── Dockerfile
+ ├── infra/
+ │   ├── terraform/
+ │   │   ├── main.tf
+ │   │   ├── variables.tf
+ │   │   └── outputs.tf
+ │   └── ansible/
+ │       ├── inventory/
+ │       │   └── hosts.ini
+ │       └── playbooks/
+ │           ├── jenkins.yml
+ │           ├── docker.yml
+ │           └── k8s.yml
 
-├── infra/
-│   ├── terraform/
-│   │   ├── main.tf
-│   │   ├── variables.tf
-│   │   └── outputs.tf
-│   └── ansible/
-│       ├── inventory/
-│       │   └── hosts.ini
-│       └── playbooks/
-│           ├── jenkins.yml
-│           ├── docker.yml
-│           └── k8s.yml
+ ├── jenkins/
+ │   ├── frontend.Jenkinsfile
+ │   ├── backend.Jenkinsfile
+ │   ├── deploy.Jenkinsfile
+ │   └── shared/
+ │       └── utils.groovy
 
-├── jenkins/
-│   ├── frontend.Jenkinsfile
-│   ├── backend.Jenkinsfile
-│   ├── deploy.Jenkinsfile
-│   └── shared/
-│       └── utils.groovy
+ ├── k8s/
+ │   ├── frontend-deployment.yaml
+ │   ├── backend-deployment.yaml
+ │   ├── postgres-deployment.yaml
+ │   ├── ingress.yaml
+ │   └── namespace.yaml
 
-├── k8s/
-│   ├── frontend-deployment.yaml
-│   ├── backend-deployment.yaml
-│   ├── postgres-deployment.yaml
-│   ├── ingress.yaml
-│   └── namespace.yaml
+ ├── monitoring/
+ │   └── elk/
+ │       ├── docker-compose.yml
+ │       └── logstash.conf
 
-├── monitoring/
-│   └── elk/
-│       ├── docker-compose.yml
-│       └── logstash.conf
-
-└── dashboard/
+ └── dashboard/
     └── components/
         └── CICDStatus.jsx
 
-    
+                             
 ## 🧪 2. CI/CD Pipeline Strategy — Modular (as you planned 💥)
 
-Pipeline                            	Jenkinsfile                         	Purpose
-Frontend CI/CD	                frontend.Jenkinsfile	             Build, test, push Docker, deploy FE
-Backend CI/CD	                  backend.Jenkinsfile	               Build, test, push Docker, deploy BE
-Deploy Infra	                  deploy.Jenkinsfile	               Terraform + Ansible + K8s Apply
-Monitoring Setup	              monitoring.Jenkinsfile             Setup ELK and Filebeat on nodes
+   Pipeline                            	Jenkinsfile                         	Purpose
+  Frontend CI/CD	                frontend.Jenkinsfile	             Build, test, push Docker, deploy FE
+  Backend CI/CD	                  backend.Jenkinsfile	               Build, test, push Docker, deploy BE
+  Deploy Infra	                  deploy.Jenkinsfile	               Terraform + Ansible + K8s Apply
+  Monitoring Setup	              monitoring.Jenkinsfile             Setup ELK and Filebeat on nodes
 
 ## ⚙️ Setup Instructions
-1. Clone the repo
-2. Set up Python virtualenv and install backend dependencies
-3. Install frontend packages using npm
-4. Use Docker to containerize the app
+     1. Clone the repo
+     2. Set up Python virtualenv and install backend dependencies
+     3. Install frontend packages using npm
+     4. Use Docker to containerize the app
 
 ## 🚀 Usage
-This project will be deployed using Jenkins pipelines and Kubernetes. The final deployed site includes a `/devops-dashboard` route showing CI/CD pipeline results.
+  This project will be deployed using Jenkins pipelines and Kubernetes. The final deployed site includes a `/devops-dashboard` route showing CI/CD pipeline 
+  results.
 
 
 ## 🌐 Target Deployment Architecture
@@ -121,10 +121,10 @@ This project will be deployed using Jenkins pipelines and Kubernetes. The final 
 
 ## 🧱 EC2 Infrastructure Plan
 
-Instance	             Role	                                Specs	                                             Purpose
-EC2-1	          Master Node + Jenkins Server	      Ubuntu, t2.micro (1 vCPU, 1GB RAM)	                Control Plane + Jenkins
-EC2-2	          Worker Node 1	                      Ubuntu, t2.micro	Run workloads
-EC2-3	          Worker Node 2                      	Ubuntu, t2.micro	Run workloads
+  Instance	             Role	                                Specs	                                             Purpose
+  EC2-1	          Master Node + Jenkins Server	      Ubuntu, t2.micro (1 vCPU, 1GB RAM)	                Control Plane + Jenkins
+  EC2-2	          Worker Node 1	                      Ubuntu, t2.micro	Run workloads
+  EC2-3	          Worker Node 2                      	Ubuntu, t2.micro	Run workloads
 
 
 
@@ -136,12 +136,12 @@ EC2-3	          Worker Node 2                      	Ubuntu, t2.micro	Run workloa
                       |
          -------------------------------
          |                             |
- [ EC2-2: Worker ]           [ EC2-3: Worker ]
+    [ EC2-2: Worker ]           [ EC2-3: Worker ]
          |                             |
      Pods run here            Pods run here
          |                             |
-    [Frontend]                  [Backend, DB]
-
+     [Frontend]                  [Backend, DB]
+ 
 
 ## 🌍 Final Deployment Architecture
 
