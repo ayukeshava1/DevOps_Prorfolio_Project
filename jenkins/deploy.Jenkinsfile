@@ -21,7 +21,6 @@ pipeline {
                     withEnv(["KUBECONFIG=${KUBECONFIG_FILE}"]) {
                         sh '''
                             kubectl apply -f k8s/frontend-deployment.yaml
-                            kubectl apply -f k8s/ingress.yaml
                         '''
                     }
                 }
