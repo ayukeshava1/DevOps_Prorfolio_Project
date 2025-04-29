@@ -6,7 +6,7 @@ const HeroSection = () => {
   return (
     <section className="hero">
       <div className="hero-content">
-        <h1>👨‍💻 Channakeshava B L</h1>
+        <h1>👨‍💻 Darshan</h1>
         <h2>Passionate Computer Science Graduate</h2>
         <p>
         Phase-1 Electronic City, Bangalore, Karnataka | Ayukeshava@gmail.com ☁️⚙️
