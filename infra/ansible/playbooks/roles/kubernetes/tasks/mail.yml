@@ -1,0 +1,85 @@
+---
+- name: Add Kubernetes APT repository key
+  apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+
+- name: Add Kubernetes APT repository
+  apt_repository:
+    repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+    state: present
+    filename: kubernetes
+
+- name: Install Kubernetes dependencies
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - kubelet
+      - kubeadm
+      - kubectl
+    update_cache: yes
+    state: present
+
+- name: Initialize Kubernetes cluster (on master)
+  command: kubeadm init --pod-network-cidr=10.244.0.0/16
+  when: inventory_hostname == 'jenkins-master'
+
+- name: Get kubeadm token from master
+  command: kubeadm token list -o json
+  register: kubeadm_token_output
+  when: inventory_hostname == 'jenkins-master'
+
+- name: Set token as fact
+  set_fact:
+    kubeadm_token: "{{ (kubeadm_token_output.stdout | from_json)[0]['token'] }}"
+  when: inventory_hostname == 'jenkins-master'
+
+- name: Get CA cert hash from master
+  command: "openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | \
+            openssl rsa -pubin -outform der 2>/dev/null | \
+            openssl dgst -sha256 -hex | sed 's/^.* //'"
+  register: ca_hash_output
+  when: inventory_hostname == 'jenkins-master'
+
+- name: Set ca_hash as fact
+  set_fact:
+    ca_hash: "{{ ca_hash_output.stdout }}"
+  when: inventory_hostname == 'jenkins-master'
+
+- name: Create .kube directory for user
+  file:
+    path: /home/{{ ansible_user }}/.kube
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+  when: inventory_hostname == 'jenkins-master'
+
+- name: Set up kubeconfig for user
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/{{ ansible_user }}/.kube/config
+    mode: 0600
+    remote_src: yes
+  when: inventory_hostname == 'jenkins-master'
+
+- name: Install Flannel network plugin
+  command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+  when: inventory_hostname == 'jenkins-master'
+
+- name: Remove taints on master to allow pod scheduling
+  shell: |
+    kubectl taint nodes --all node-role.kubernetes.io/master- || true
+    kubectl taint nodes --all node-role.kubernetes.io/control-plane- || true
+  when: inventory_hostname == 'jenkins-master'
+
+- name: Set token/hash on all hosts
+  set_fact:
+    kubeadm_token: "{{ hostvars['jenkins-master'].kubeadm_token }}"
+    ca_hash: "{{ hostvars['jenkins-master'].ca_hash }}"
+
+- name: Join node to Kubernetes cluster (on worker nodes)
+  command: kubeadm join {{ hostvars['jenkins-master']['ansible_facts']['default_ipv4']['address'] }}:6443 --token {{ kubeadm_token }} --discovery-token-ca-cert-hash sha256:{{ ca_hash }}
+  when: inventory_hostname != 'jenkins-master'

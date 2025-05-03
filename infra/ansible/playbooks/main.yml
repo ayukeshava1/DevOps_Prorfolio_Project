@@ -1,0 +1,26 @@
+---
+- name: Provision Jenkins, Docker, Python, and Kubernetes
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  roles:
+    - common
+    - docker
+    - python
+
+- name: Provision Jenkins master
+  hosts: jenkins
+  become: yes
+  gather_facts: yes
+
+  roles:
+    - jenkins
+
+- name: Provision Kubernetes
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  roles:
+    - kubernetes
