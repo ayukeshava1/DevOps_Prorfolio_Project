@@ -1,39 +1,49 @@
 pipeline {
     agent any
 
+    environment {
+        FRONTEND_IMAGE = "ayuleshava/frontend-app:latest"
+        BACKEND_IMAGE = "ayuleshava/backend-app:latest"
+        K8S_NAMESPACE = "portfolio"
+    }
+
     stages {
-        stage('Checkout') {
+        stage('Pull Frontend Image') {
             steps {
-                // Git checkout using the 'main' branch without credentialsId (assuming it's a public repo)
-                git branch: 'main', url: 'https://github.com/ayukeshava1/DevOps_Prorfolio_Project.git'
-            }
-        }
-
-        stage('Approve Deployment') {
-            steps {
-                input message: '✅ Approve to deploy latest images to K8s cluster?'
-            }
-        }
-
-        stage('Apply K8s YAMLs') {
-            steps {
-                withCredentials([file(credentialsId: 'k8s-kubeconfig', variable: 'KUBECONFIG_FILE')]) {
-                    withEnv(["KUBECONFIG=${KUBECONFIG_FILE}"]) {
-                        sh '''
-                            kubectl apply -f k8s/frontend-deployment.yaml
-                        '''
-                    }
+                script {
+                    echo "Pulling Frontend Docker image..."
+                    sh "docker pull ${FRONTEND_IMAGE}"
                 }
             }
         }
-    }
 
-    post {
-        success {
-            echo "✅ All services deployed successfully 🎉"
+        stage('Pull Backend Image') {
+            steps {
+                script {
+                    echo "Pulling Backend Docker image..."
+                    sh "docker pull ${BACKEND_IMAGE}"
+                }
+            }
         }
-        failure {
-            echo "❌ Deployment failed. Check logs."
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    echo "Deploying to Kubernetes..."
+
+                    // Apply Kubernetes manifest for frontend deployment
+                    sh """
+                    kubectl apply -f k8s/frontend-deployment.yaml
+                    kubectl apply -f k8s/frontend-service.yaml
+                    """
+
+                    // Apply Kubernetes manifest for backend deployment
+                    sh """
+                    kubectl apply -f k8s/backend-deployment.yaml
+                    kubectl apply -f k8s/backend-service.yaml
+                    """
+                }
+            }
         }
     }
 }
